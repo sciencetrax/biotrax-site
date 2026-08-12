@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BioTrax — Biobanking, inside StudyTrax</title>
+<meta name="description" content="BioTrax: study-first biospecimen lifecycle management, built for foundations that share science with qualified researchers.">
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --bg:#F5F5F5;
+    --bg-white:#FFFFFF;
+    --ink:#1B2836;
+    --ink-soft:#516072;
+    --ink-faint:#8695A6;
+    --blue:#396B9E;
+    --blue-deep:#254A6E;
+    --blue-pale:#E7EEF5;
+    --orange:#F7B342;
+    --orange-deep:#C97F16;
+    --line:rgba(27,40,54,.09);
+    --radius-lg:18px;
+    --radius-md:12px;
+    --shadow-card:0 1px 2px rgba(20,32,46,.04), 0 16px 40px -24px rgba(20,32,46,.28);
+    --shadow-pop:0 24px 64px -20px rgba(20,32,46,.35);
+    --ease:cubic-bezier(.22,.75,.28,1);
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
+
+  body{
+    margin:0;
+    font-family:var(--font);
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  img{max-width:100%;display:block}
+  a{color:inherit}
+  .container{max-width:1180px;margin:0 auto;padding:0 28px}
+  @media (max-width:640px){.container{padding:0 20px}}
+
+  section{position:relative}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--blue-deep);
+  }
+  .eyebrow::before{content:"";width:18px;height:2px;background:var(--orange);border-radius:2px}
+
+  h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
+  p{margin:0;color:var(--ink-soft);line-height:1.6}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    padding:14px 26px;border-radius:999px;font-size:15px;font-weight:600;
+    text-decoration:none;cursor:pointer;border:1px solid transparent;
+    transition:transform .35s var(--ease), box-shadow .35s var(--ease), background .25s, border-color .25s, color .25s;
+    white-space:nowrap;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--orange);color:#2b1c02;box-shadow:0 10px 30px -10px rgba(247,179,66,.65)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 36px -10px rgba(247,179,66,.75)}
+  .btn-ghost{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.4);backdrop-filter:blur(6px)}
+  .btn-ghost:hover{background:rgba(255,255,255,.18);transform:translateY(-2px)}
+  .btn-solid{background:var(--blue);color:#fff;box-shadow:0 10px 30px -12px rgba(57,107,158,.55)}
+  .btn-solid:hover{transform:translateY(-2px);background:var(--blue-deep)}
+
+  /* ============ NAV ============ */
+  .nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 28px;
+    background:rgba(255,255,255,0);
+    border-bottom:1px solid rgba(27,40,54,0);
+    transform:translateY(-8px);
+    opacity:0;pointer-events:none;
+    transition:opacity .4s var(--ease), transform .4s var(--ease), background .4s, border-color .4s;
+  }
+  .nav.nav-visible{
+    opacity:1;pointer-events:auto;transform:translateY(0);
+    background:rgba(255,255,255,.86);backdrop-filter:blur(10px) saturate(1.2);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-word{font-weight:700;font-size:16.5px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .nav-word .dot{width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px var(--blue-pale)}
+  .nav-links{display:flex;gap:28px;align-items:center;list-style:none;margin:0;padding:0}
+  .nav-links a{font-size:14.5px;font-weight:600;color:var(--ink-soft);text-decoration:none;transition:color .2s}
+  .nav-links a:hover{color:var(--blue-deep)}
+  @media (max-width:720px){.nav-links{display:none}}
+
+  /* ============ HERO ============ */
+  .hero{
+    position:relative;
+    height:100vh;min-height:640px;
+    overflow:hidden;
+    background:radial-gradient(120% 100% at 50% 0%, #123456 0%, #0d2a44 42%, #0a1f36 100%);
+    display:flex;align-items:center;justify-content:center;
+  }
+  #hero-canvas{
+    position:absolute;inset:0;width:100%;height:100%;
+    display:block;
+    opacity:0;transition:opacity 1.4s var(--ease);
+  }
+  #hero-canvas.ready{opacity:1}
+
+  .hero-vignette{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(60% 55% at 50% 38%, rgba(9,22,38,0) 0%, rgba(9,22,38,.35) 62%, rgba(8,19,32,.82) 100%),
+      linear-gradient(180deg, rgba(8,19,32,.15) 0%, rgba(8,19,32,.05) 30%, rgba(8,19,32,.55) 100%);
+    pointer-events:none;
+  }
+
+  /* static fallback when WebGL is unavailable */
+  .hero.no-webgl{
+    background:
+      radial-gradient(90% 70% at 20% 15%, rgba(57,107,158,.55), transparent 60%),
+      radial-gradient(80% 60% at 85% 25%, rgba(247,179,66,.35), transparent 55%),
+      linear-gradient(160deg,#0a1f36 0%, #123456 45%, #0d2a44 100%);
+  }
+  .hero.no-webgl #hero-canvas{display:none}
+
+  .hero-content{
+    position:relative;z-index:2;
+    text-align:center;color:#fff;
+    max-width:760px;padding:0 24px;
+    display:flex;flex-direction:column;align-items:center;gap:22px;
+  }
+  .hero-eyebrow{
+    font-size:12.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:#F7C876;
+    display:flex;align-items:center;gap:10px;
+  }
+  .hero-eyebrow::before,.hero-eyebrow::after{content:"";width:26px;height:1px;background:rgba(247,179,66,.55)}
+  .hero h1{
+    font-size:clamp(3rem,7.5vw,5.6rem);
+    line-height:.98;
+    letter-spacing:-.02em;
+    color:#fff;
+    font-weight:700;
+    background:linear-gradient(180deg,#ffffff 0%, #dfe9f3 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .hero-sub{
+    font-size:clamp(1.02rem,2vw,1.28rem);
+    color:rgba(230,238,247,.86);
+    max-width:560px;line-height:1.55;font-weight:400;
+  }
+  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+
+  .scroll-cue{
+    position:absolute;left:50%;bottom:34px;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    color:rgba(255,255,255,.65);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    z-index:2;text-decoration:none;
+  }
+  .scroll-cue svg{animation:bob 2.1s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+  @media (prefers-reduced-motion:reduce){.scroll-cue svg{animation:none}}
+
+  /* ============ STORY ============ */
+  .story{background:var(--bg-white);padding:120px 0 108px}
+  .section-head{max-width:640px;margin:0 auto 56px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center}
+  .section-head h2{font-size:clamp(1.9rem,3.4vw,2.6rem)}
+  .section-head p{font-size:16.5px}
+
+  .story-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+  @media (max-width:900px){.story-grid{grid-template-columns:1fr;max-width:480px;margin:0 auto}}
+
+  .story-card{
+    background:var(--bg-white);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:32px 28px 30px;
+    box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;gap:16px;
+    opacity:0;transform:translateY(22px);
+    transition:opacity .7s var(--ease), transform .7s var(--ease), box-shadow .3s, border-color .3s;
+    transition-delay:calc(var(--i,0) * 110ms);
+  }
+  .story-card.in-view{opacity:1;transform:translateY(0)}
+  .story-card:hover{box-shadow:var(--shadow-pop);border-color:rgba(57,107,158,.25);transform:translateY(-4px)}
+  .story-card.in-view:hover{transform:translateY(-4px)}
+
+  .story-icon{
+    width:50px;height:50px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(150deg,var(--blue-pale),#fff);
+    color:var(--blue);
+  }
+  .story-card:nth-child(2) .story-icon{color:var(--orange-deep);background:linear-gradient(150deg,#FBEACB,#fff)}
+  .story-card:nth-child(3) .story-icon{color:var(--blue);background:linear-gradient(150deg,var(--blue-pale),#fff)}
+  .story-tag{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .story-card h3{font-size:1.28rem}
+  .story-card p{font-size:15px}
+
+  /* ============ SHOWCASE ============ */
+  .showcase{background:var(--bg);padding:112px 0}
+  .video-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  @media (max-width:820px){.video-grid{grid-template-columns:1fr}}
+
+  .video-card{
+    background:var(--bg-white);border:1px solid var(--line);border-radius:var(--radius-lg);
+    overflow:hidden;box-shadow:var(--shadow-card);
+    opacity:0;transform:translateY(22px);
+    transition:opacity .7s var(--ease), transform .7s var(--ease);
+    transition-delay:calc(var(--i,0) * 130ms);
+  }
+  .video-card.in-view{opacity:1;transform:translateY(0)}
+  .video-frame{position:relative;width:100%;aspect-ratio:16/9;background:#0d2a44}
+  .video-frame video{width:100%;height:100%;display:block;object-fit:cover;background:#0d2a44}
+  .video-meta{padding:20px 24px 24px;display:flex;flex-direction:column;gap:6px}
+  .video-kicker{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)}
+  .video-meta h3{font-size:1.18rem}
+  .video-meta p{font-size:14.5px}
+
+  /* ============ SCREENS ============ */
+  .screens{background:var(--bg-white);padding:108px 0 118px}
+  .screens .container{padding:0}
+  .screens .section-head{padding:0 28px}
+  .screens-viewport{
+    margin-top:8px;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 48px,#000 calc(100% - 48px),transparent 100%);
+    mask-image:linear-gradient(90deg,transparent 0,#000 48px,#000 calc(100% - 48px),transparent 100%);
+  }
+  .screens-strip{
+    display:flex;gap:20px;
+    overflow-x:auto;overscroll-behavior-x:contain;
+    scroll-snap-type:x proximity;
+    padding:14px 48px 22px;
+    scrollbar-width:thin;scrollbar-color:var(--blue) transparent;
+  }
+  .screens-strip::-webkit-scrollbar{height:7px}
+  .screens-strip::-webkit-scrollbar-track{background:transparent}
+  .screens-strip::-webkit-scrollbar-thumb{background:rgba(57,107,158,.35);border-radius:8px}
+  .screens-strip::-webkit-scrollbar-thumb:hover{background:rgba(57,107,158,.55)}
+
+  .screen-item{
+    flex:0 0 auto;width:clamp(230px,26vw,290px);
+    scroll-snap-align:start;
+    display:flex;flex-direction:column;gap:10px;
+    opacity:0;transform:translateY(16px);
+    transition:opacity .6s var(--ease), transform .6s var(--ease);
+    transition-delay:calc(var(--i,0) * 55ms);
+  }
+  .screen-item.in-view{opacity:1;transform:translateY(0)}
+  .screen-figure{
+    aspect-ratio:16/10;border-radius:var(--radius-md);overflow:hidden;
+    background:linear-gradient(150deg,var(--blue-pale),#eef2f6);
+    border:1px solid var(--line);box-shadow:var(--shadow-card);
+    position:relative;
+  }
+  .screen-figure img{width:100%;height:100%;object-fit:cover}
+  .screen-num{
+    position:absolute;top:10px;left:10px;
+    font-size:10.5px;font-weight:700;letter-spacing:.06em;
+    background:rgba(13,42,68,.72);color:#fff;padding:3px 8px;border-radius:999px;
+  }
+  .screen-cap{font-size:13.5px;font-weight:600;color:var(--ink-soft)}
+  .screen-cap b{color:var(--ink);font-weight:650}
+
+  /* ============ NEXT ============ */
+  .next{
+    background:linear-gradient(180deg,#0d2a44 0%, #0a1f36 100%);
+    color:#fff;padding:120px 0 96px;
+    overflow:hidden;position:relative;
+  }
+  .next::before{
+    content:"";position:absolute;inset:-20% -10% auto auto;width:60%;aspect-ratio:1;
+    background:radial-gradient(circle,rgba(57,107,158,.4),transparent 65%);
+    pointer-events:none;
+  }
+  .next .section-head h2{color:#fff}
+  .next .section-head p{color:rgba(230,238,247,.78)}
+
+  .steps{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+    position:relative;max-width:980px;margin:0 auto 56px;
+  }
+  @media (max-width:820px){.steps{grid-template-columns:1fr;gap:34px}}
+  .step{
+    position:relative;padding:0 26px;text-align:left;
+    opacity:0;transform:translateY(18px);
+    transition:opacity .7s var(--ease), transform .7s var(--ease);
+    transition-delay:calc(var(--i,0) * 130ms);
+  }
+  .step.in-view{opacity:1;transform:translateY(0)}
+  .step:first-child{padding-left:0}
+  .step:last-child{padding-right:0}
+  .step::before{
+    content:"";position:absolute;top:26px;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,rgba(255,255,255,.02),rgba(255,255,255,.22),rgba(255,255,255,.02));
+    z-index:0;
+  }
+  @media (max-width:820px){.step::before{display:none}}
+  .step-num{
+    position:relative;z-index:1;
+    width:52px;height:52px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:18px;
+    background:#0a1f36;border:1px solid rgba(247,179,66,.55);color:var(--orange);
+    margin-bottom:20px;
+  }
+  .step h3{color:#fff;font-size:1.15rem;margin-bottom:8px}
+  .step p{font-size:14.5px;color:rgba(230,238,247,.75)}
+
+  .next-cta{
+    display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;
+    padding-top:12px;border-top:1px solid rgba(255,255,255,.12);max-width:520px;margin:0 auto;
+  }
+  .next-cta p{color:rgba(230,238,247,.72);font-size:14.5px}
+
+  /* ============ FOOTER ============ */
+  footer{
+    background:#0a1f36;color:rgba(230,238,247,.55);
+    text-align:center;font-size:13px;padding:26px 20px;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+
+  .reveal-group[data-count]{ }
+</style>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-word"><span class="dot"></span>BioTrax</div>
+    <ul class="nav-links">
+      <li><a href="#top">Overview</a></li>
+      <li><a href="#showcase">Demo</a></li>
+      <li><a href="#screens">Workflow</a></li>
+      <li><a href="#next">Next</a></li>
+    </ul>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <canvas id="hero-canvas" aria-hidden="true"></canvas>
+    <div class="hero-vignette" aria-hidden="true"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">StudyTrax · Biospecimen Lifecycle</div>
+      <h1>BioTrax</h1>
+      <p class="hero-sub">Biobanking, inside StudyTrax — built for foundations that share science.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="#showcase" data-scroll>Watch the demo</a>
+        <a class="btn btn-ghost" href="assets/biotrax-customer-walkthrough.pptx">The walkthrough deck</a>
+      </div>
+    </div>
+    <a class="scroll-cue" href="#story" data-scroll aria-label="Scroll to learn more">
+      <span>Scroll</span>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </section>
+
+  <!-- ============ STORY ============ -->
+  <section class="story" id="story">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">How it works</span>
+        <h2>Collect. Bank. Share.</h2>
+        <p>One system of record for the physical specimen — from the family's kitchen table to the researcher's bench.</p>
+      </div>
+      <div class="story-grid">
+        <article class="story-card" style="--i:0">
+          <div class="story-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 8l9-5 9 5-9 5-9-5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 8v8l9 5 9-5V8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 13v8" stroke="currentColor" stroke-width="1.6"/></svg>
+          </div>
+          <span class="story-tag">Collect</span>
+          <h3>Kit-by-mail, on schedule</h3>
+          <p>Kits generated straight from the visit and event schedule, tracked family to lab — because your registry is global, not down the hall.</p>
+        </article>
+        <article class="story-card" style="--i:1">
+          <div class="story-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M4.5 5.5l15 13M19.5 5.5l-15 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="9.4" stroke="currentColor" stroke-width="1.3" opacity=".35"/></svg>
+          </div>
+          <span class="story-tag">Bank</span>
+          <h3>Receiving, storage, custody</h3>
+          <p>Intake, condition checks, and freezer location logged on arrival — with a full chain of custody on every biospecimen and derivative.</p>
+        </article>
+        <article class="story-card" style="--i:2">
+          <div class="story-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="2.6" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="5.5" r="2.6" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="18.5" r="2.6" stroke="currentColor" stroke-width="1.6"/><path d="M7.3 10.8l8.4-4.3M7.3 13.2l8.4 4.3" stroke="currentColor" stroke-width="1.6"/></svg>
+          </div>
+          <span class="story-tag">Share</span>
+          <h3>Request, approve, distribute</h3>
+          <p>A researcher requests, your access committee approves against consent, and the shipment goes out — with results reported back to the community.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SHOWCASE ============ -->
+  <section class="showcase" id="showcase">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">See it in motion</span>
+        <h2>Two ways to look under the hood</h2>
+        <p>A quick tour if you're short on time, or the full walkthrough if you want to see every screen.</p>
+      </div>
+      <div class="video-grid">
+        <article class="video-card" style="--i:0">
+          <div class="video-frame">
+            <video controls preload="none" poster="assets/poster-short.png" playsinline>
+              <source src="assets/biotrax-demo-short.mp4" type="video/mp4">
+              Your browser does not support embedded video.
+            </video>
+          </div>
+          <div class="video-meta">
+            <span class="video-kicker">3-Minute Tour</span>
+            <h3>The shape of the product</h3>
+            <p>Collect, bank, and share — the whole loop, fast.</p>
+          </div>
+        </article>
+        <article class="video-card" style="--i:1">
+          <div class="video-frame">
+            <video controls preload="none" poster="assets/poster-full.png" playsinline>
+              <source src="assets/biotrax-demo-full.mp4" type="video/mp4">
+              Your browser does not support embedded video.
+            </video>
+          </div>
+          <div class="video-meta">
+            <span class="video-kicker">Full Walkthrough</span>
+            <h3>Every screen, start to finish</h3>
+            <p>Schedule through chain of custody, screen by screen.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREENS ============ -->
+  <section class="screens" id="screens">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Inside the workflow</span>
+        <h2>From visit schedule to chain of custody</h2>
+        <p>A working prototype, screen by screen — scroll to browse.</p>
+      </div>
+    </div>
+    <div class="screens-viewport">
+      <div class="screens-strip" id="screens-strip"></div>
+    </div>
+  </section>
+
+  <!-- ============ NEXT ============ -->
+  <section class="next" id="next">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow" style="color:#F7C876">Where this goes</span>
+        <h2>This is a prototype, on purpose</h2>
+        <p>Which means it's still shaped around your protocol, not the other way around.</p>
+      </div>
+      <div class="steps">
+        <div class="step" style="--i:0">
+          <div class="step-num">1</div>
+          <h3>Your requirements</h3>
+          <p>We start from how your natural history study, kits, and researcher requests actually run — not a generic inventory template.</p>
+        </div>
+        <div class="step" style="--i:1">
+          <div class="step-num">2</div>
+          <h3>The prototype evolves</h3>
+          <p>Variant-linked samples, access-committee approval, iPSC lineage — whatever your biobank needs to track, built against your workflow.</p>
+        </div>
+        <div class="step" style="--i:2">
+          <div class="step-num">3</div>
+          <h3>Pilot on your protocol</h3>
+          <p>Run a real collection cycle on real data before anyone commits to a platform decision.</p>
+        </div>
+      </div>
+      <div class="next-cta">
+        <p>Want to talk through what this would look like on your registry?</p>
+        <a class="btn btn-solid" href="mailto:leslie.hanks@sciencetrax.com">Start the conversation</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    A ScienceTrax working prototype · prepared for the CSNK2A1 Foundation · August 2026
+  </footer>
+
+<script>
+  // ============ NAV VISIBILITY ============
+  (function(){
+    const nav = document.getElementById('nav');
+    const onScroll = () => {
+      if (window.scrollY > window.innerHeight * 0.7) nav.classList.add('nav-visible');
+      else nav.classList.remove('nav-visible');
+    };
+    window.addEventListener('scroll', onScroll, { passive:true });
+    onScroll();
+  })();
+
+  // ============ SMOOTH SCROLL ============
+  document.querySelectorAll('[data-scroll]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      const target = document.querySelector(el.getAttribute('href'));
+      if(!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start' });
+    });
+  });
+
+  // ============ SCREENSHOT STRIP (build from filenames) ============
+  (function(){
+    const shots = [
+      ['deck-01-schedule.png','Visit & event schedule'],
+      ['deck-02-labvalues.png','Study-defined collection entities'],
+      ['deck-03-kitdesigner.png','Kit designer — versioned templates'],
+      ['deck-04-collection.png','Collection on the study record'],
+      ['deck-05-recv-arrival.png','Receiving — manifest-verified arrival'],
+      ['deck-06-recv-sample.png','Receiving — per-sample wizard'],
+      ['deck-07-storage.png','Storage — elevation & positions'],
+      ['deck-08-appvisuals.png','The live working application'],
+      ['deck-09-capacity.png','Capacity dashboard'],
+      ['deck-10-requests.png','Researcher requests & approval'],
+      ['deck-11-pulllist.png','Location-sorted pull list'],
+      ['deck-12-shipments.png','Shipments — inbound & outbound'],
+      ['deck-13-results.png','Results — verified ingestion'],
+      ['deck-14-custody.png','Chain of custody']
+    ];
+    const strip = document.getElementById('screens-strip');
+    const frag = document.createDocumentFragment();
+    shots.forEach(([file, label], i)=>{
+      const fig = document.createElement('figure');
+      fig.className = 'screen-item';
+      fig.style.setProperty('--i', i);
+      fig.innerHTML = `
+        <div class="screen-figure">
+          <span class="screen-num">${String(i+1).padStart(2,'0')} / ${shots.length}</span>
+          <img src="assets/shots/${file}" alt="BioTrax screen — ${label}" loading="lazy" decoding="async">
+        </div>
+        <figcaption class="screen-cap"><b>${label}</b></figcaption>`;
+      frag.appendChild(fig);
+    });
+    strip.appendChild(frag);
+  })();
+
+  // ============ SCROLL REVEAL ============
+  (function(){
+    const targets = document.querySelectorAll('.story-card, .video-card, .screen-item, .step');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced){
+      targets.forEach(t=>t.classList.add('in-view'));
+      return;
+    }
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.16, rootMargin: '0px 0px -6% 0px' });
+    targets.forEach(t=>io.observe(t));
+  })();
+
+  // ============ HERO THREE.JS SCENE ============
+  (function(){
+    const heroEl = document.getElementById('hero');
+    const canvas = document.getElementById('hero-canvas');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function supportsWebGL(){
+      try{
+        const c = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')));
+      }catch(e){ return false; }
+    }
+
+    function fallback(){
+      heroEl.classList.add('no-webgl');
+    }
+
+    if (!supportsWebGL()){ fallback(); return; }
+
+    import('https://unpkg.com/three@0.160.0/build/three.module.js')
+      .then(THREE => bootScene(THREE))
+      .catch(fallback);
+
+    function bootScene(THREE){
+      let renderer, scene, camera, helixGroup, particles, rafId;
+      let width, height;
+      const mouse = { x:0, y:0 };
+      const mouseTarget = { x:0, y:0 };
+      const clock = new THREE.Clock();
+      let running = true;
+      let frameHandle = null;
+
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, powerPreference:'high-performance' });
+      } catch(e){ fallback(); return; }
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+      camera.position.set(0, 0.4, 13.5);
+      camera.lookAt(0,0,0);
+
+      scene.add(new THREE.AmbientLight(0x6f88a8, 1.1));
+      const lightBlue = new THREE.PointLight(0x6fa8dc, 6, 30);
+      lightBlue.position.set(-6, 4, 6);
+      scene.add(lightBlue);
+      const lightOrange = new THREE.PointLight(0xf7b342, 5, 30);
+      lightOrange.position.set(6, -3, 4);
+      scene.add(lightOrange);
+      const lightRim = new THREE.PointLight(0xffffff, 2.4, 40);
+      lightRim.position.set(0, 6, -8);
+      scene.add(lightRim);
+
+      // ---- helix of glowing sample tubes ----
+      const isSmall = window.innerWidth < 720;
+      const tubesPerStrand = isSmall ? 22 : 34;
+      const turns = 3.1;
+      const helixHeight = 11;
+      const helixRadius = 2.9;
+
+      helixGroup = new THREE.Group();
+
+      const tubeGeo = new THREE.CapsuleGeometry(0.11, 0.46, 4, 8);
+      const matBlue = new THREE.MeshStandardMaterial({
+        color: 0x5fa0d6, emissive: 0x2f6fa8, emissiveIntensity: 0.9,
+        metalness: 0.25, roughness: 0.3
+      });
+      const matOrange = new THREE.MeshStandardMaterial({
+        color: 0xf7c876, emissive: 0xd98f1f, emissiveIntensity: 0.95,
+        metalness: 0.2, roughness: 0.32
+      });
+
+      const strandAPts = [];
+      const strandBPts = [];
+
+      for (let i = 0; i < tubesPerStrand; i++){
+        const t = i / (tubesPerStrand - 1);
+        const angle = t * Math.PI * 2 * turns;
+        const y = (t - 0.5) * helixHeight;
+
+        const ax = Math.cos(angle) * helixRadius;
+        const az = Math.sin(angle) * helixRadius;
+        const bx = Math.cos(angle + Math.PI) * helixRadius;
+        const bz = Math.sin(angle + Math.PI) * helixRadius;
+
+        const tubeA = new THREE.Mesh(tubeGeo, matBlue);
+        tubeA.position.set(ax, y, az);
+        tubeA.rotation.z = Math.sin(angle) * 0.4;
+        tubeA.rotation.x = Math.cos(angle) * 0.4;
+        helixGroup.add(tubeA);
+        strandAPts.push(new THREE.Vector3(ax, y, az));
+
+        const tubeB = new THREE.Mesh(tubeGeo, matOrange);
+        tubeB.position.set(bx, y, bz);
+        tubeB.rotation.z = Math.sin(angle + Math.PI) * 0.4;
+        tubeB.rotation.x = Math.cos(angle + Math.PI) * 0.4;
+        helixGroup.add(tubeB);
+        strandBPts.push(new THREE.Vector3(bx, y, bz));
+      }
+
+      // faint rungs connecting the two strands, every few steps
+      const rungMat = new THREE.LineBasicMaterial({ color: 0xbfd7ef, transparent:true, opacity:0.22 });
+      for (let i = 0; i < tubesPerStrand; i += 3){
+        const g = new THREE.BufferGeometry().setFromPoints([strandAPts[i], strandBPts[i]]);
+        helixGroup.add(new THREE.Line(g, rungMat));
+      }
+
+      scene.add(helixGroup);
+
+      // ---- soft glow particle field ----
+      function glowTexture(){
+        const size = 96;
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const ctx = c.getContext('2d');
+        const g = ctx.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2);
+        g.addColorStop(0, 'rgba(255,255,255,1)');
+        g.addColorStop(0.35, 'rgba(255,255,255,.7)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,size,size);
+        return new THREE.CanvasTexture(c);
+      }
+
+      const particleCount = isSmall ? 260 : 520;
+      const positions = new Float32Array(particleCount * 3);
+      const colors = new Float32Array(particleCount * 3);
+      const colorBlue = new THREE.Color(0x6fa8dc);
+      const colorOrange = new THREE.Color(0xf7c876);
+      const colorWhite = new THREE.Color(0xdfeaf5);
+
+      for (let i = 0; i < particleCount; i++){
+        const r = 6 + Math.random() * 9;
+        const theta = Math.random() * Math.PI * 2;
+        const y = (Math.random() - 0.5) * 16;
+        positions[i*3]   = Math.cos(theta) * r;
+        positions[i*3+1] = y;
+        positions[i*3+2] = Math.sin(theta) * r - 2;
+
+        const pick = Math.random();
+        const c = pick < 0.4 ? colorBlue : pick < 0.7 ? colorOrange : colorWhite;
+        colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+      }
+
+      const pGeo = new THREE.BufferGeometry();
+      pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      pGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      const pMat = new THREE.PointsMaterial({
+        size: isSmall ? 0.16 : 0.14,
+        map: glowTexture(),
+        transparent: true,
+        opacity: 0.85,
+        vertexColors: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true
+      });
+      particles = new THREE.Points(pGeo, pMat);
+      scene.add(particles);
+
+      // ---- sizing ----
+      function resize(){
+        const rect = heroEl.getBoundingClientRect();
+        width = rect.width; height = rect.height;
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // ---- mouse parallax ----
+      window.addEventListener('pointermove', (e) => {
+        mouseTarget.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseTarget.y = (e.clientY / window.innerHeight) * 2 - 1;
+      }, { passive:true });
+
+      // ---- scroll fade ----
+      function applyScrollFade(){
+        const h = heroEl.offsetHeight || window.innerHeight;
+        const progress = Math.min(Math.max(window.scrollY / h, 0), 1);
+        canvas.style.opacity = String((1 - progress * 1.15) * (canvas.classList.contains('ready') ? 1 : 0) || 0);
+        canvas.style.transform = `translateY(${progress * 40}px) scale(${1 + progress * 0.04})`;
+      }
+      window.addEventListener('scroll', applyScrollFade, { passive:true });
+
+      // ---- pause offscreen (continuous loop only runs without reduced motion) ----
+      if (!reduced){
+        const io = new IntersectionObserver((entries)=>{
+          entries.forEach(entry => { running = entry.isIntersecting; });
+          if (running && !frameHandle) frameHandle = requestAnimationFrame(animate);
+        }, { threshold: 0 });
+        io.observe(heroEl);
+      }
+
+      // ---- animate ----
+      function animate(){
+        frameHandle = null;
+        if (!running){ return; }
+        const dt = Math.min(clock.getDelta(), 0.05);
+
+        if (!reduced){
+          helixGroup.rotation.y += dt * 0.16;
+          particles.rotation.y -= dt * 0.045;
+
+          mouse.x += (mouseTarget.x - mouse.x) * 0.04;
+          mouse.y += (mouseTarget.y - mouse.y) * 0.04;
+          camera.position.x += (mouse.x * 1.1 - camera.position.x) * 0.05;
+          camera.position.y += (0.4 - mouse.y * 0.7 - camera.position.y) * 0.05;
+          camera.lookAt(0, 0, 0);
+        }
+
+        renderer.render(scene, camera);
+        frameHandle = requestAnimationFrame(animate);
+      }
+
+      requestAnimationFrame(()=>{
+        renderer.render(scene, camera);
+        canvas.classList.add('ready');
+        applyScrollFade();
+        if (!reduced) { frameHandle = requestAnimationFrame(animate); }
+      });
+    }
+  })();
+</script>
+</body>
+</html>
