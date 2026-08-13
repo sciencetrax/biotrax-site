@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BioTrax — Narration voice samples</title>
+<style>
+  :root{--bg:#F5F5F5;--card:#fff;--line:#E2E2E2;--blue:#396B9E;--orange:#F7B342;--strong:#1F2937;--body:#545454;--muted:#767676}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--body);font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;padding:40px 20px}
+  .wrap{max-width:860px;margin:0 auto}
+  h1{font-size:26px;color:var(--strong);margin-bottom:6px}
+  h1 b{color:var(--blue)} h1 span{color:var(--orange)}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:8px}
+  .note{background:#FFF6D5;border:1px solid var(--orange);color:#806A00;border-radius:10px;padding:12px 16px;font-size:13.5px;margin:16px 0 26px}
+  .quote{background:#EEF3F8;border-radius:10px;padding:14px 18px;font-size:14px;color:var(--strong);font-style:italic;margin-bottom:26px}
+  .voice{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .voice .meta{flex:1;min-width:240px}
+  .voice .name{font-weight:600;color:var(--strong);font-size:16px}
+  .voice .id{font-size:12px;color:var(--muted);font-family:Consolas,monospace;margin-top:2px}
+  .voice .desc{font-size:13.5px;color:var(--body);margin-top:4px}
+  .voice audio{width:320px;max-width:100%}
+  .tag{display:inline-block;font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:2px}
+  .tag.cur{background:#C7D9EB;color:#33608D}
+  .tag.hd{background:#B3E8C1;color:#196F31}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><b>STUDY</b><span>TRAX</span> · BioTrax narration — voice samples</h1>
+  <p class="sub">Same paragraph, ten voices. Pick one and the videos re-render with it.</p>
+  <div class="note"><b>Note:</b> these are the neural voices available today. The ElevenLabs lane (Rachel and the premium catalog — smoother still) unlocks the moment the API key cap is raised in the ElevenLabs dashboard; samples will be added here for comparison.</div>
+  <div class="quote">"Sharing is where a foundation's biobank earns its keep. A qualified researcher requests samples. Approval checks the family's consent scope and any use restrictions before anything moves. Every release is deliberate, and every release is recorded."</div>
+  <div id="list"></div>
+</div>
+<script>
+const VOICES=[
+ ["ava","en-US-AvaMultilingualNeural","Ava — US female, multilingual HD","smoothest of this set","hd"],
+ ["emma","en-US-EmmaMultilingualNeural","Emma — US female, multilingual HD","warm, natural pacing","hd"],
+ ["jenny","en-US-JennyNeural","Jenny — US female","current video voice","cur"],
+ ["aria","en-US-AriaNeural","Aria — US female","expressive, more dynamic range",""],
+ ["michelle","en-US-MichelleNeural","Michelle — US female","mature, calm, steady",""],
+ ["emma-std","en-US-EmmaNeural","Emma (standard) — US female","lighter, younger",""],
+ ["clara","en-CA-ClaraNeural","Clara — Canadian female","crisp, clinical-clean",""],
+ ["sonia","en-GB-SoniaNeural","Sonia — British female","measured, formal",""],
+ ["emily","en-IE-EmilyNeural","Emily — Irish female","soft, gentle lilt",""],
+ ["andrew","en-US-AndrewMultilingualNeural","Andrew — US male, multilingual HD","contrast option","hd"],
+];
+document.getElementById('list').innerHTML = VOICES.map(([slug,id,name,desc,tag])=>`
+  <div class="voice">
+    <div class="meta">
+      <div class="name">${name}${tag==='cur'?'<span class="tag cur">current</span>':''}${tag==='hd'?'<span class="tag hd">HD</span>':''}</div>
+      <div class="id">${id}</div>
+      <div class="desc">${desc}</div>
+    </div>
+    <audio controls preload="none" src="assets/voices/${slug}.mp3"></audio>
+  </div>`).join('');
+</script>
+</body>
+</html>
