@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BioTrax — How data flows</title>
+  <!-- three.js r169 (npm version 0.169.0), pinned below. -->
+  <style>
+    :root {
+      --bg: #0d1526;
+      --card: #121c31;
+      --line: #24334d;
+      --blue: #5B9BD5;
+      --blueDeep: #396B9E;
+      --orange: #F7B342;
+      --text: #EAF0F8;
+      --muted: #8CA0BC;
+      --green: #4ADE80;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 50% 35%, #14213c 0%, #0d1526 60%);
+      font-family:
+        "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui,
+        -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .wrap {
+      width: min(1240px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 34px 0 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 3vw, 2.4rem);
+      line-height: 1.15;
+      letter-spacing: -0.035em;
+    }
+
+    h1 .b {
+      color: var(--blue);
+    }
+
+    h1 .o {
+      color: var(--orange);
+    }
+
+    .subheading {
+      max-width: 900px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: clamp(0.92rem, 1.6vw, 1.04rem);
+      line-height: 1.55;
+    }
+
+    .scene-shell {
+      position: relative;
+      width: 100%;
+      height: clamp(500px, 70vh, 720px);
+      overflow: hidden;
+      border: 1px solid rgba(36, 51, 77, 0.9);
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(57, 107, 158, 0.14), transparent 34%),
+        linear-gradient(180deg, rgba(18, 28, 49, 0.5), rgba(13, 21, 38, 0.15));
+      box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(234, 240, 248, 0.025);
+    }
+
+    .scene-shell canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+    }
+
+    .fallback {
+      display: grid;
+      min-height: 100%;
+      place-items: center;
+      padding: 32px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    .fallback a,
+    footer a {
+      color: var(--blue);
+      text-decoration-color: rgba(91, 155, 213, 0.5);
+      text-underline-offset: 3px;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .legend-item {
+      display: grid;
+      grid-template-columns: 12px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      min-height: 70px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(18, 28, 49, 0.78);
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      margin-top: 4px;
+      border-radius: 50%;
+      background: var(--swatch);
+      box-shadow: 0 0 13px color-mix(in srgb, var(--swatch) 70%, transparent);
+    }
+
+    .legend-copy {
+      min-width: 0;
+    }
+
+    .legend-copy strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--text);
+      font-size: 0.86rem;
+    }
+
+    .legend-copy span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.45;
+    }
+
+    footer {
+      padding: 24px 0 32px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      .wrap {
+        width: min(100% - 20px, 1240px);
+      }
+
+      header {
+        padding-top: 24px;
+      }
+
+      .scene-shell {
+        height: clamp(440px, 64vh, 620px);
+        border-radius: 16px;
+      }
+
+      .legend {
+        grid-template-columns: 1fr;
+      }
+
+      .legend-item {
+        min-height: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="wrap">
+    <h1><span class="b">Bio</span><span class="o">Trax</span> — every sample's data, one current</h1>
+    <p class="subheading">What flows in, what the bank holds, and what flows back out — nothing retyped, everything audited.</p>
+  </header>
+
+  <main class="wrap">
+    <section
+      id="scene"
+      class="scene-shell"
+      aria-label="BioTrax — How data flows"
+    ></section>
+
+    <section class="legend" aria-label="Data-flow legend">
+      <div class="legend-item">
+        <span class="swatch" style="--swatch: #5B9BD5"></span>
+        <div class="legend-copy">
+          <strong>Into the bank</strong>
+          <span>identity, collections, shipments, results</span>
+        </div>
+      </div>
+
+      <div class="legend-item">
+        <span class="swatch" style="--swatch: #F7B342"></span>
+        <div class="legend-copy">
+          <strong>Out of the bank</strong>
+          <span>the study record, researchers, oversight</span>
+        </div>
+      </div>
+
+      <div class="legend-item">
+        <span class="swatch" style="--swatch: #4ADE80"></span>
+        <div class="legend-copy">
+          <strong>Physical world</strong>
+          <span>scans and shipments</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    BioTrax · a ScienceTrax working prototype · <a href="index.html">back to the showcase</a>
+  </footer>
+
+  <script type="module">
+    import * as THREE from "three";
+
+    const COLORS = Object.freeze({
+      bg: "#0d1526",
+      card: "#121c31",
+      line: "#24334d",
+      blue: "#5B9BD5",
+      blueDeep: "#396B9E",
+      orange: "#F7B342",
+      text: "#EAF0F8",
+      muted: "#8CA0BC",
+      green: "#4ADE80"
+    });
+
+    const INPUTS = Object.freeze([
+      {
+        label: "StudyTrax",
+        sublabel: "subjects · visits · consent scope",
+        particle: COLORS.blue,
+        hot: true
+      },
+      {
+        label: "Collection events",
+        sublabel: "clinic visits · OR · kit-by-mail",
+        particle: COLORS.blue
+      },
+      {
+        label: "Inbound shipments",
+        sublabel: "manifests · temp loggers",
+        particle: COLORS.green
+      },
+      {
+        label: "Lab results",
+        sublabel: "HL7 feeds · files · scans",
+        particle: COLORS.blue
+      },
+      {
+        label: "Barcode scans",
+        sublabel: "every touch, at the bench",
+        particle: COLORS.green
+      }
+    ]);
+
+    const OUTPUTS = Object.freeze([
+      {
+        label: "Study record",
+        sublabel: "forms · status · results applied",
+        particle: COLORS.orange,
+        hot: true
+      },
+      {
+        label: "Researchers",
+        sublabel: "approved requests · MTA-gated",
+        particle: COLORS.orange
+      },
+      {
+        label: "Fulfillment",
+        sublabel: "pull lists · outbound manifests",
+        particle: COLORS.orange
+      },
+      {
+        label: "Oversight",
+        sublabel: "capacity · compliance · audit",
+        particle: COLORS.orange
+      },
+      {
+        label: "Labels & printers",
+        sublabel: "cryo-safe barcodes",
+        particle: COLORS.orange
+      }
+    ]);
+
+    const stage = document.querySelector("#scene");
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    function showFallback() {
+      stage.innerHTML = `
+        <div class="fallback">
+          <p>
+            WebGL is unavailable in this browser.<br>
+            <a href="dataflow.html">View the working 2D version instead.</a>
+          </p>
+        </div>
+      `;
+    }
+
+    function createRenderer() {
+      try {
+        const probe = document.createElement("canvas");
+        const context =
+          probe.getContext("webgl2") ||
+          probe.getContext("webgl") ||
+          probe.getContext("experimental-webgl");
+
+        if (!window.WebGLRenderingContext || !context) {
+          throw new Error("WebGL unavailable");
+        }
+
+        return new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance"
+        });
+      } catch {
+        return null;
+      }
+    }
+
+    function roundedPath(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(
+        x + width,
+        y + height,
+        x + width - r,
+        y + height
+      );
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function roundedShape(width, height, radius) {
+      const x = -width / 2;
+      const y = -height / 2;
+      const r = Math.min(radius, width / 2, height / 2);
+      const shape = new THREE.Shape();
+
+      shape.moveTo(x + r, y);
+      shape.lineTo(x + width - r, y);
+      shape.quadraticCurveTo(x + width, y, x + width, y + r);
+      shape.lineTo(x + width, y + height - r);
+      shape.quadraticCurveTo(
+        x + width,
+        y + height,
+        x + width - r,
+        y + height
+      );
+      shape.lineTo(x + r, y + height);
+      shape.quadraticCurveTo(x, y + height, x, y + height - r);
+      shape.lineTo(x, y + r);
+      shape.quadraticCurveTo(x, y, x + r, y);
+
+      return shape;
+    }
+
+    function createSoftTexture(innerColor = "rgba(255,255,255,1)") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 128;
+
+      const ctx = canvas.getContext("2d");
+      const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+
+      gradient.addColorStop(0, innerColor);
+      gradient.addColorStop(0.18, "rgba(255,255,255,0.92)");
+      gradient.addColorStop(0.48, "rgba(255,255,255,0.28)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 128, 128);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    function createHaloTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+
+      const ctx = canvas.getContext("2d");
+      const gradient = ctx.createRadialGradient(256, 256, 34, 256, 256, 256);
+
+      gradient.addColorStop(0, "rgba(91,155,213,0.72)");
+      gradient.addColorStop(0.22, "rgba(91,155,213,0.34)");
+      gradient.addColorStop(0.52, "rgba(57,107,158,0.12)");
+      gradient.addColorStop(1, "rgba(57,107,158,0)");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 512, 512);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function createCardTexture(node, anisotropy) {
+      /*
+       * Card copy is rendered into a 1536×480 CanvasTexture. This is much
+       * denser than its on-screen size, preserving sharp text across resize
+       * and high-DPR displays while the underlying mesh retains real depth.
+       */
+      const canvas = document.createElement("canvas");
+      canvas.width = 1536;
+      canvas.height = 480;
+
+      const ctx = canvas.getContext("2d");
+      ctx.textBaseline = "middle";
+
+      roundedPath(ctx, 8, 8, 1520, 464, 68);
+      ctx.fillStyle = COLORS.card;
+      ctx.fill();
+
+      ctx.lineWidth = node.hot ? 13 : 7;
+      ctx.strokeStyle = node.hot ? COLORS.blue : COLORS.line;
+      ctx.stroke();
+
+      if (node.hot) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.lineWidth = 24;
+        ctx.globalAlpha = 0.17;
+        ctx.strokeStyle = COLORS.blue;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      const accent = ctx.createLinearGradient(72, 0, 250, 0);
+      accent.addColorStop(0, node.hot ? COLORS.blue : COLORS.blueDeep);
+      accent.addColorStop(1, "rgba(57,107,158,0)");
+
+      ctx.fillStyle = accent;
+      ctx.fillRect(72, 83, 180, 8);
+
+      ctx.shadowColor = "rgba(0,0,0,0.55)";
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetY = 4;
+
+      ctx.fillStyle = COLORS.text;
+      ctx.font =
+        '700 96px "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif';
+      ctx.fillText(node.label, 72, 205);
+
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 2;
+      ctx.fillStyle = COLORS.muted;
+      ctx.font =
+        '500 56px "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif';
+      ctx.fillText(node.sublabel, 72, 326);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = anisotropy;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.generateMipmaps = true;
+      return texture;
+    }
+
+    function createCoreLabelTexture(anisotropy) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1400;
+      canvas.height = 820;
+
+      const ctx = canvas.getContext("2d");
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(4,9,18,0.95)";
+      ctx.shadowBlur = 25;
+      ctx.shadowOffsetY = 6;
+
+      ctx.font =
+        '800 154px "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif';
+
+      const bioWidth = ctx.measureText("Bio").width;
+      const traxWidth = ctx.measureText("Trax").width;
+      const start = 700 - (bioWidth + traxWidth) / 2;
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = COLORS.blue;
+      ctx.fillText("Bio", start, 220);
+      ctx.fillStyle = COLORS.orange;
+      ctx.fillText("Trax", start + bioWidth, 220);
+
+      ctx.textAlign = "center";
+      ctx.font =
+        '600 53px "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif';
+
+      ctx.fillStyle = "#BFD4EE";
+      ctx.fillText("inventory · custody · storage", 700, 388);
+      ctx.fillText("kits · requests · approvals", 700, 482);
+
+      ctx.fillStyle = COLORS.orange;
+      ctx.fillText("append-only audit trail", 700, 576);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = anisotropy;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.generateMipmaps = true;
+      return texture;
+    }
+
+    const renderer = createRenderer();
+
+    if (!renderer) {
+      showFallback();
+    } else {
+      init(renderer);
+    }
+
+    function init(webglRenderer) {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 100);
+
+      webglRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      webglRenderer.setClearColor(0x000000, 0);
+      webglRenderer.outputColorSpace = THREE.SRGBColorSpace;
+      webglRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+      webglRenderer.toneMappingExposure = 1.12;
+      webglRenderer.domElement.setAttribute("aria-hidden", "true");
+      stage.appendChild(webglRenderer.domElement);
+
+      const anisotropy = Math.min(
+        16,
+        webglRenderer.capabilities.getMaxAnisotropy()
+      );
+
+      scene.add(new THREE.HemisphereLight(0x9fc8ee, 0x07101f, 1.15));
+
+      const keyLight = new THREE.DirectionalLight(0xc5ddff, 1.65);
+      keyLight.position.set(3, 7, 10);
+      scene.add(keyLight);
+
+      const rimLight = new THREE.PointLight(0x5b9bd5, 18, 16, 2);
+      rimLight.position.set(-1.5, 1.5, 3.5);
+      scene.add(rimLight);
+
+      const warmLight = new THREE.PointLight(0xf7b342, 11, 13, 2);
+      warmLight.position.set(4.5, -2, 2);
+      scene.add(warmLight);
+
+      const starTexture = createSoftTexture();
+      const particleTexture = createSoftTexture();
+      const haloTexture = createHaloTexture();
+
+      const starCount = 430;
+      const starPositions = new Float32Array(starCount * 3);
+      const starColors = new Float32Array(starCount * 3);
+      const cool = new THREE.Color(COLORS.blue);
+      const pale = new THREE.Color("#BFD4EE");
+
+      for (let i = 0; i < starCount; i += 1) {
+        const index = i * 3;
+        starPositions[index] = (Math.random() - 0.5) * 39;
+        starPositions[index + 1] = (Math.random() - 0.5) * 23;
+        starPositions[index + 2] = -4 - Math.random() * 23;
+
+        const color = cool.clone().lerp(pale, Math.random() * 0.65);
+        starColors[index] = color.r;
+        starColors[index + 1] = color.g;
+        starColors[index + 2] = color.b;
+      }
+
+      const starGeometry = new THREE.BufferGeometry();
+      starGeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(starPositions, 3)
+      );
+      starGeometry.setAttribute(
+        "color",
+        new THREE.BufferAttribute(starColors, 3)
+      );
+
+      const stars = new THREE.Points(
+        starGeometry,
+        new THREE.PointsMaterial({
+          size: 0.105,
+          map: starTexture,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.38,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          sizeAttenuation: true
+        })
+      );
+      scene.add(stars);
+
+      const halo = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: haloTexture,
+          color: COLORS.blue,
+          transparent: true,
+          opacity: 0.42,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
+        })
+      );
+      halo.position.set(0, 0, -0.38);
+      halo.scale.set(6.2, 6.2, 1);
+      scene.add(halo);
+
+      const coreGeometry = new THREE.SphereGeometry(1.58, 72, 54);
+      const coreMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0x214a72,
+        emissive: 0x315f89,
+        emissiveIntensity: 1.42,
+        metalness: 0.14,
+        roughness: 0.26,
+        clearcoat: 0.82,
+        clearcoatRoughness: 0.2
+      });
+
+      const core = new THREE.Mesh(coreGeometry, coreMaterial);
+      scene.add(core);
+
+      const shell = new THREE.Mesh(
+        new THREE.SphereGeometry(1.72, 56, 40),
+        new THREE.MeshBasicMaterial({
+          color: COLORS.blue,
+          transparent: true,
+          opacity: 0.075,
+          side: THREE.BackSide,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
+        })
+      );
+      scene.add(shell);
+
+      const coreLabel = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: createCoreLabelTexture(anisotropy),
+          transparent: true,
+          depthTest: false,
+          depthWrite: false
+        })
+      );
+      coreLabel.position.set(0, 0, 1.78);
+      coreLabel.scale.set(4.45, 2.61, 1);
+      coreLabel.renderOrder = 20;
+      scene.add(coreLabel);
+
+      const cardWidth = 4.85;
+      const cardHeight = 1.52;
+      const cardDepth = 0.13;
+      const yPositions = [4.2, 2.1, 0, -2.1, -4.2];
+      const zPositions = [-0.58, -0.12, 0.26, -0.12, -0.58];
+      const cardPositions = { input: [], output: [] };
+
+      function addCard(node, side, index) {
+        const arcDepth = 0.62 * (1 - Math.abs(yPositions[index]) / 4.2);
+        const x = side * (7.18 + arcDepth);
+        const y = yPositions[index];
+        const z = zPositions[index];
+
+        const group = new THREE.Group();
+        group.position.set(x, y, z);
+        group.rotation.y = side < 0 ? 0.16 : -0.16;
+        group.rotation.x = -y * 0.012;
+        group.rotation.z = side * y * 0.006;
+
+        const panelGeometry = new THREE.ExtrudeGeometry(
+          roundedShape(cardWidth, cardHeight, 0.19),
+          {
+            depth: cardDepth,
+            bevelEnabled: false,
+            steps: 1,
+            curveSegments: 18
+          }
+        );
+
+        const panel = new THREE.Mesh(
+          panelGeometry,
+          new THREE.MeshStandardMaterial({
+            color: COLORS.card,
+            roughness: 0.55,
+            metalness: 0.08
+          })
+        );
+        group.add(panel);
+
+        if (node.hot) {
+          const glowGeometry = new THREE.ShapeGeometry(
+            roundedShape(cardWidth + 0.18, cardHeight + 0.18, 0.23),
+            18
+          );
+          const glow = new THREE.Mesh(
+            glowGeometry,
+            new THREE.MeshBasicMaterial({
+              color: COLORS.blue,
+              transparent: true,
+              opacity: 0.22,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending
+            })
+          );
+          glow.position.z = cardDepth * 0.42;
+          glow.renderOrder = 1;
+          group.add(glow);
+        }
+
+        const faceTexture = createCardTexture(node, anisotropy);
+        const face = new THREE.Mesh(
+          new THREE.PlaneGeometry(cardWidth, cardHeight),
+          new THREE.MeshBasicMaterial({
+            map: faceTexture,
+            transparent: true,
+            depthWrite: true,
+            toneMapped: false
+          })
+        );
+        face.position.z = cardDepth + 0.008;
+        face.renderOrder = 4;
+        group.add(face);
+
+        scene.add(group);
+
+        const position = new THREE.Vector3(x, y, z + cardDepth);
+        if (side < 0) {
+          cardPositions.input.push(position);
+        } else {
+          cardPositions.output.push(position);
+        }
+      }
+
+      INPUTS.forEach((node, index) => addCard(node, -1, index));
+      OUTPUTS.forEach((node, index) => addCard(node, 1, index));
+
+      const movingParticles = [];
+
+      function addFlow(curve, lineColor, particleColor, laneIndex, outbound) {
+        const tube = new THREE.Mesh(
+          new THREE.TubeGeometry(curve, 96, 0.024, 7, false),
+          new THREE.MeshBasicMaterial({
+            color: lineColor,
+            transparent: true,
+            opacity: 0.36,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+          })
+        );
+        scene.add(tube);
+
+        const duration = 4.15 + laneIndex * 0.31 + (outbound ? 0.23 : 0);
+        const lanePhase = (laneIndex * 0.137 + (outbound ? 0.071 : 0)) % 1;
+        const streamCount = 4;
+        const tailCount = 3;
+
+        for (let stream = 0; stream < streamCount; stream += 1) {
+          const streamPhase = lanePhase + stream / streamCount;
+
+          for (let tail = 0; tail < tailCount; tail += 1) {
+            const opacity = [0.96, 0.48, 0.2][tail];
+            const size = [0.22, 0.16, 0.11][tail];
+
+            const sprite = new THREE.Sprite(
+              new THREE.SpriteMaterial({
+                map: particleTexture,
+                color: particleColor,
+                transparent: true,
+                opacity,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+              })
+            );
+
+            sprite.scale.set(size, size, 1);
+            scene.add(sprite);
+
+            movingParticles.push({
+              sprite,
+              curve,
+              speed: 1 / duration,
+              phase: streamPhase,
+              tailOffset: tail * 0.0185
+            });
+          }
+        }
+      }
+
+      cardPositions.input.forEach((position, index) => {
+        const start = new THREE.Vector3(
+          position.x + cardWidth * 0.49,
+          position.y,
+          position.z + 0.02
+        );
+        const end = new THREE.Vector3(
+          -1.48,
+          position.y * 0.075,
+          0.08 + (index - 2) * 0.035
+        );
+        const control = new THREE.Vector3(
+          -3.85,
+          position.y * 0.56,
+          position.z * 0.5 + (index - 2) * 0.18
+        );
+
+        addFlow(
+          new THREE.QuadraticBezierCurve3(start, control, end),
+          COLORS.blue,
+          INPUTS[index].particle,
+          index,
+          false
+        );
+      });
+
+      cardPositions.output.forEach((position, index) => {
+        const start = new THREE.Vector3(
+          1.48,
+          position.y * 0.075,
+          0.08 + (index - 2) * 0.035
+        );
+        const end = new THREE.Vector3(
+          position.x - cardWidth * 0.49,
+          position.y,
+          position.z + 0.02
+        );
+        const control = new THREE.Vector3(
+          3.85,
+          position.y * 0.56,
+          position.z * 0.5 - (index - 2) * 0.18
+        );
+
+        addFlow(
+          new THREE.QuadraticBezierCurve3(start, control, end),
+          COLORS.orange,
+          OUTPUTS[index].particle,
+          index,
+          true
+        );
+      });
+
+      const pointer = new THREE.Vector2();
+      const smoothedPointer = new THREE.Vector2();
+      let cameraDistance = 15.8;
+      let viewportWidth = 1;
+      let viewportHeight = 1;
+
+      function resize() {
+        const rect = stage.getBoundingClientRect();
+        viewportWidth = Math.max(1, Math.round(rect.width));
+        viewportHeight = Math.max(1, Math.round(rect.height));
+
+        webglRenderer.setPixelRatio(
+          Math.min(window.devicePixelRatio || 1, 2)
+        );
+        webglRenderer.setSize(viewportWidth, viewportHeight, false);
+
+        camera.aspect = viewportWidth / viewportHeight;
+        camera.updateProjectionMatrix();
+
+        const halfHorizontalFov =
+          Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)) *
+          camera.aspect;
+
+        cameraDistance = Math.max(15.8, 10.7 / halfHorizontalFov);
+        camera.position.set(0, 0, cameraDistance);
+        camera.lookAt(0, 0, 0);
+
+        if (reducedMotion) {
+          updateScene(0, false);
+          webglRenderer.render(scene, camera);
+        }
+      }
+
+      if (!reducedMotion) {
+        stage.addEventListener("pointermove", (event) => {
+          const rect = stage.getBoundingClientRect();
+          pointer.x =
+            ((event.clientX - rect.left) / Math.max(rect.width, 1)) * 2 - 1;
+          pointer.y =
+            -((event.clientY - rect.top) / Math.max(rect.height, 1)) * 2 + 1;
+        });
+
+        stage.addEventListener("pointerleave", () => {
+          pointer.set(0, 0);
+        });
+      }
+
+      function updateScene(elapsed, motionEnabled) {
+        const time = motionEnabled ? elapsed : 0;
+
+        movingParticles.forEach((particle) => {
+          let t =
+            particle.phase +
+            time * particle.speed -
+            particle.tailOffset;
+
+          t = ((t % 1) + 1) % 1;
+          particle.curve.getPointAt(t, particle.sprite.position);
+        });
+
+        if (!motionEnabled) {
+          core.scale.setScalar(1);
+          shell.scale.setScalar(1);
+          halo.scale.set(6.2, 6.2, 1);
+          halo.material.opacity = 0.42;
+          camera.position.set(0, 0, cameraDistance);
+          camera.lookAt(0, 0, 0);
+          return;
+        }
+
+        const pulse = Math.sin(time * Math.PI * 0.48);
+        const coreScale = 1 + pulse * 0.018;
+        const shellScale = 1 + pulse * 0.035;
+
+        core.scale.setScalar(coreScale);
+        shell.scale.setScalar(shellScale);
+        halo.scale.setScalar(6.2 + pulse * 0.28);
+        halo.material.opacity = 0.4 + pulse * 0.055;
+
+        core.rotation.y = time * 0.075;
+        core.rotation.x = Math.sin(time * 0.19) * 0.035;
+        stars.rotation.y = time * 0.0025;
+        stars.rotation.x = Math.sin(time * 0.035) * 0.008;
+
+        smoothedPointer.lerp(pointer, 0.025);
+
+        const idleX = Math.sin(time * 0.115) * 0.42;
+        const idleY = Math.cos(time * 0.092) * 0.22;
+        const mouseX = smoothedPointer.x * 0.62;
+        const mouseY = smoothedPointer.y * 0.38;
+
+        camera.position.set(
+          idleX + mouseX,
+          idleY + mouseY,
+          cameraDistance + Math.sin(time * 0.08) * 0.16
+        );
+        camera.lookAt(0, 0, 0);
+      }
+
+      const resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(stage);
+      resize();
+
+      updateScene(0, false);
+      webglRenderer.render(scene, camera);
+
+      if (!reducedMotion) {
+        const clock = new THREE.Clock();
+
+        function animate() {
+          requestAnimationFrame(animate);
+          updateScene(clock.getElapsedTime(), true);
+          webglRenderer.render(scene, camera);
+        }
+
+        animate();
+      }
+    }
+  </script>
+</body>
+</html>
