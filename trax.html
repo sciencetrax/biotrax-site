@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trax — voice auditions</title>
+<style>
+  :root{--bg:#0d1526;--card:#121c31;--line:#24334d;--blue:#5B9BD5;--orange:#F7B342;--text:#EAF0F8;--muted:#8CA0BC}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 800px at 50% 20%, #14213c 0%, var(--bg) 60%);color:var(--text);font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;min-height:100vh}
+  .wrap{max-width:900px;margin:0 auto;padding:44px 24px}
+  h1{font-size:clamp(24px,3.4vw,40px);font-weight:700;text-align:center}
+  h1 .b{color:var(--blue)} h1 .o{color:var(--orange)}
+  .sub{text-align:center;color:var(--muted);font-size:clamp(13px,1.4vw,16px);margin-top:8px}
+  h2.group{margin:36px 0 6px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+  h2.group small{display:block;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400;font-size:13px;margin-top:3px}
+  .row{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-top:12px}
+  .row.current{border-color:var(--orange)}
+  .row .name{min-width:130px;font-weight:600}
+  .row .name .tag{font-size:11px;font-weight:600;color:var(--bg);background:var(--orange);border-radius:99px;padding:2px 9px;margin-left:8px;vertical-align:1px}
+  .row audio{flex:1;height:36px}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 40px}
+  footer a{color:var(--blue);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="b">Trax</span> — voice auditions</h1>
+  <p class="sub">Same intro line, six takes. Pick the one that IS Trax — then the video gets rebuilt once.</p>
+
+  <h2 class="group">Deep · professional<small>"deep, resonant, confident and warm with a playful spark"</small></h2>
+  <div class="row current">
+    <span class="name">Deep 1 <span class="tag">in video now</span></span>
+    <audio controls preload="none" src="assets/trax-voices/deep-1-current.mp3"></audio>
+  </div>
+  <div class="row">
+    <span class="name">Deep 2</span>
+    <audio controls preload="none" src="assets/trax-voices/deep-2.mp3"></audio>
+  </div>
+  <div class="row">
+    <span class="name">Deep 3</span>
+    <audio controls preload="none" src="assets/trax-voices/deep-3.mp3"></audio>
+  </div>
+
+  <h2 class="group">Deep · friendlier &amp; upbeat<small>"warm, friendly and upbeat - a bright smile in the voice, loves showing people around"</small></h2>
+  <div class="row">
+    <span class="name">Upbeat 1</span>
+    <audio controls preload="none" src="assets/trax-voices/upbeat-1.mp3"></audio>
+  </div>
+  <div class="row">
+    <span class="name">Upbeat 2</span>
+    <audio controls preload="none" src="assets/trax-voices/upbeat-2.mp3"></audio>
+  </div>
+  <div class="row">
+    <span class="name">Upbeat 3</span>
+    <audio controls preload="none" src="assets/trax-voices/upbeat-3.mp3"></audio>
+  </div>
+</div>
+<footer>BioTrax · a ScienceTrax working prototype · <a href="index.html">back to the showcase</a> · <a href="videos.html">narration previews</a></footer>
+</body>
+</html>
