@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BioTrax — Narration previews</title>
+<style>
+  :root{--bg:#0d1526;--card:#121c31;--line:#24334d;--blue:#5B9BD5;--orange:#F7B342;--text:#EAF0F8;--muted:#8CA0BC;--green:#4ADE80}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 800px at 50% 20%, #14213c 0%, var(--bg) 60%);color:var(--text);font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;min-height:100vh}
+  .wrap{max-width:1240px;margin:0 auto;padding:44px 24px}
+  h1{font-size:clamp(24px,3.4vw,40px);font-weight:700;text-align:center}
+  h1 .b{color:var(--blue)} h1 .o{color:var(--orange)}
+  .sub{text-align:center;color:var(--muted);font-size:clamp(13px,1.4vw,16px);margin-top:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px;margin-top:34px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .card.hot{border-color:var(--blue)}
+  .card video{width:100%;display:block;background:#000;aspect-ratio:16/9}
+  .meta{padding:14px 16px 16px}
+  .meta h2{font-size:17px;font-weight:600}
+  .meta h2 .tag{font-size:11px;font-weight:600;color:var(--bg);background:var(--blue);border-radius:99px;padding:2px 9px;margin-left:8px;vertical-align:2px}
+  .meta h2 .tag.o{background:var(--orange)}
+  .meta p{color:var(--muted);font-size:13px;margin-top:5px;line-height:1.45}
+  .pending{border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:240px}
+  .pending .meta{text-align:center}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 40px}
+  footer a{color:var(--blue);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="b">Bio</span><span class="o">Trax</span> — narration previews</h1>
+  <p class="sub">Same 3-minute demo, three voices. Pick the one that carries the meeting.</p>
+
+  <div class="grid">
+    <div class="card">
+      <video controls preload="metadata" poster="assets/videos/poster-short.png" src="assets/videos/short-jenny.mp4"></video>
+      <div class="meta">
+        <h2>Jenny <span class="tag">current</span></h2>
+        <p>en-US-JennyNeural · edge-tts · the voice on the delivered videos today</p>
+      </div>
+    </div>
+    <div class="card hot">
+      <video controls preload="metadata" poster="assets/videos/poster-short.png" src="assets/videos/short-aria.mp4"></video>
+      <div class="meta">
+        <h2>Aria</h2>
+        <p>en-US-AriaNeural · edge-tts · your pick from the voice-samples page</p>
+      </div>
+    </div>
+    <div class="card hot">
+      <video controls preload="metadata" poster="assets/videos/poster-short.png" src="assets/videos/short-emma.mp4"></video>
+      <div class="meta">
+        <h2>Emma</h2>
+        <p>en-US-EmmaNeural · edge-tts · your second pick</p>
+      </div>
+    </div>
+    <div class="card pending">
+      <div class="meta">
+        <h2>Sarah <span class="tag o">pending</span></h2>
+        <p>ElevenLabs premium render — waiting on the 'lex' API key credit-cap raise.<br>Lands here (~3 min) once the cap is lifted.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>BioTrax · a ScienceTrax working prototype · <a href="index.html">back to the showcase</a> · <a href="voice-samples.html">voice samples</a></footer>
+</body>
+</html>
