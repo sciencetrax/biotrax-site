@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BioTrax — How data flows</title>
+<style>
+  :root{--bg:#0d1526;--card:#121c31;--line:#24334d;--blue:#5B9BD5;--blueDeep:#396B9E;--orange:#F7B342;--text:#EAF0F8;--muted:#8CA0BC;--green:#4ADE80}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 800px at 50% 35%, #14213c 0%, var(--bg) 60%);color:var(--text);font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+  .wrap{max-width:1240px;margin:0 auto;padding:44px 24px}
+  h1{font-size:clamp(24px,3.4vw,40px);font-weight:700;text-align:center}
+  h1 .b{color:var(--blue)} h1 .o{color:var(--orange)}
+  .sub{text-align:center;color:var(--muted);font-size:clamp(13px,1.4vw,16px);margin-top:8px}
+  .stage{position:relative;margin-top:26px}
+  svg{width:100%;height:auto;display:block}
+  .lane{fill:none;stroke:url(#flowGrad);stroke-width:2.2;opacity:.5}
+  .lane.out{stroke:url(#flowGradOut)}
+  .dotpath{fill:none;stroke:none}
+  .node{fill:var(--card);stroke:var(--line);stroke-width:1.4;rx:14}
+  .node.hot{stroke:var(--blue)}
+  .nlabel{fill:var(--text);font-size:15px;font-weight:600;font-family:inherit}
+  .nsub{fill:var(--muted);font-size:11.5px;font-family:inherit}
+  .core{filter:drop-shadow(0 0 26px rgba(91,155,213,.55))}
+  .coreTitle{fill:#fff;font-size:24px;font-weight:800;letter-spacing:.5px}
+  .coreSub{fill:#BFD4EE;font-size:11px}
+  .ring{fill:none;stroke:var(--blue);opacity:.28;transform-origin:620px 330px;animation:pulse 4.5s ease-out infinite}
+  .ring.r2{animation-delay:1.5s}.ring.r3{animation-delay:3s}
+  @keyframes pulse{0%{transform:scale(.72);opacity:.4}100%{transform:scale(1.35);opacity:0}}
+  .dot{r:4.2;fill:var(--blue);filter:drop-shadow(0 0 6px rgba(91,155,213,.9))}
+  .dot.o{fill:var(--orange);filter:drop-shadow(0 0 6px rgba(247,179,66,.9))}
+  .dot.g{fill:var(--green);filter:drop-shadow(0 0 6px rgba(74,222,128,.8))}
+  .legend{display:flex;gap:26px;justify-content:center;margin-top:18px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+  .legend b{color:var(--text);font-weight:600}
+  .sw{display:inline-block;width:22px;height:4px;border-radius:2px;margin-right:7px;vertical-align:3px}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:26px 0 40px}
+  footer a{color:var(--blue);text-decoration:none}
+  @media (prefers-reduced-motion: reduce){.ring{animation:none}.dot{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="b">Bio</span><span class="o">Trax</span> — every sample's data, one current</h1>
+  <p class="sub">What flows in, what the bank holds, and what flows back out — nothing retyped, everything audited.</p>
+
+  <div class="stage">
+  <svg viewBox="0 0 1240 660" role="img" aria-label="BioTrax data flow diagram">
+    <defs>
+      <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#5B9BD5" stop-opacity=".15"/><stop offset="100%" stop-color="#5B9BD5" stop-opacity=".85"/>
+      </linearGradient>
+      <linearGradient id="flowGradOut" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#F7B342" stop-opacity=".85"/><stop offset="100%" stop-color="#F7B342" stop-opacity=".15"/>
+      </linearGradient>
+      <radialGradient id="coreGrad" cx="38%" cy="30%">
+        <stop offset="0%" stop-color="#2E5A86"/><stop offset="100%" stop-color="#17365c"/>
+      </radialGradient>
+    </defs>
+
+    <!-- pulse rings behind core -->
+    <circle class="ring" cx="620" cy="330" r="150"/>
+    <circle class="ring r2" cx="620" cy="330" r="150"/>
+    <circle class="ring r3" cx="620" cy="330" r="150"/>
+
+    <!-- IN lanes (left -> core) -->
+    <path id="in1" class="lane" d="M225,105 C420,105 430,260 520,290"/>
+    <path id="in2" class="lane" d="M225,220 C400,220 420,290 515,310"/>
+    <path id="in3" class="lane" d="M225,330 C380,330 420,330 505,330"/>
+    <path id="in4" class="lane" d="M225,440 C400,440 420,370 515,350"/>
+    <path id="in5" class="lane" d="M225,555 C420,555 430,400 520,370"/>
+
+    <!-- OUT lanes (core -> right) -->
+    <path id="out1" class="lane out" d="M720,290 C810,260 820,105 1015,105"/>
+    <path id="out2" class="lane out" d="M725,310 C820,290 840,220 1015,220"/>
+    <path id="out3" class="lane out" d="M735,330 C860,330 860,330 1015,330"/>
+    <path id="out4" class="lane out" d="M725,350 C820,370 840,440 1015,440"/>
+    <path id="out5" class="lane out" d="M720,370 C810,400 820,555 1015,555"/>
+
+    <!-- IN nodes -->
+    <g class="innode">
+      <rect class="node hot" x="20" y="70" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="38" y="100">StudyTrax</text>
+      <text class="nsub" x="38" y="121">subjects · visits · consent scope</text>
+
+      <rect class="node" x="20" y="185" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="38" y="215">Collection events</text>
+      <text class="nsub" x="38" y="236">clinic visits · OR · kit-by-mail</text>
+
+      <rect class="node" x="20" y="295" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="38" y="325">Inbound shipments</text>
+      <text class="nsub" x="38" y="346">manifests · temp loggers</text>
+
+      <rect class="node" x="20" y="405" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="38" y="435">Lab results</text>
+      <text class="nsub" x="38" y="456">HL7 feeds · files · scans</text>
+
+      <rect class="node" x="20" y="520" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="38" y="550">Barcode scans</text>
+      <text class="nsub" x="38" y="571">every touch, at the bench</text>
+    </g>
+
+    <!-- CORE -->
+    <g class="core">
+      <circle cx="620" cy="330" r="118" fill="url(#coreGrad)" stroke="#5B9BD5" stroke-width="2"/>
+      <text class="coreTitle" x="620" y="312" text-anchor="middle">BioTrax</text>
+      <text class="coreSub" x="620" y="336" text-anchor="middle">inventory · custody · storage</text>
+      <text class="coreSub" x="620" y="354" text-anchor="middle">kits · requests · approvals</text>
+      <text class="coreSub" x="620" y="378" text-anchor="middle" fill="#F7B342">append-only audit trail</text>
+    </g>
+
+    <!-- OUT nodes -->
+    <g class="outnode">
+      <rect class="node hot" x="1015" y="70" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="1033" y="100">Study record</text>
+      <text class="nsub" x="1033" y="121">forms · status · results applied</text>
+
+      <rect class="node" x="1015" y="185" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="1033" y="215">Researchers</text>
+      <text class="nsub" x="1033" y="236">approved requests · MTA-gated</text>
+
+      <rect class="node" x="1015" y="295" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="1033" y="325">Fulfillment</text>
+      <text class="nsub" x="1033" y="346">pull lists · outbound manifests</text>
+
+      <rect class="node" x="1015" y="405" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="1033" y="435">Oversight</text>
+      <text class="nsub" x="1033" y="456">capacity · compliance · audit</text>
+
+      <rect class="node" x="1015" y="520" width="205" height="70" rx="14"/>
+      <text class="nlabel" x="1033" y="550">Labels &amp; printers</text>
+      <text class="nsub" x="1033" y="571">cryo-safe barcodes</text>
+    </g>
+
+    <!-- animated dots -->
+    <circle class="dot"><animateMotion dur="4s" repeatCount="indefinite"><mpath href="#in1"/></animateMotion></circle>
+    <circle class="dot"><animateMotion dur="5.2s" begin="0.8s" repeatCount="indefinite"><mpath href="#in2"/></animateMotion></circle>
+    <circle class="dot g"><animateMotion dur="4.6s" begin="1.6s" repeatCount="indefinite"><mpath href="#in3"/></animateMotion></circle>
+    <circle class="dot"><animateMotion dur="5.6s" begin="2.2s" repeatCount="indefinite"><mpath href="#in4"/></animateMotion></circle>
+    <circle class="dot g"><animateMotion dur="4.3s" begin="3s" repeatCount="indefinite"><mpath href="#in5"/></animateMotion></circle>
+    <circle class="dot o"><animateMotion dur="4.4s" begin="0.4s" repeatCount="indefinite"><mpath href="#out1"/></animateMotion></circle>
+    <circle class="dot o"><animateMotion dur="5.4s" begin="1.2s" repeatCount="indefinite"><mpath href="#out2"/></animateMotion></circle>
+    <circle class="dot o"><animateMotion dur="4.8s" begin="2s" repeatCount="indefinite"><mpath href="#out3"/></animateMotion></circle>
+    <circle class="dot o"><animateMotion dur="5.8s" begin="2.8s" repeatCount="indefinite"><mpath href="#out4"/></animateMotion></circle>
+    <circle class="dot o"><animateMotion dur="4.5s" begin="3.4s" repeatCount="indefinite"><mpath href="#out5"/></animateMotion></circle>
+  </svg>
+  </div>
+
+  <div class="legend">
+    <span><span class="sw" style="background:#5B9BD5"></span><b>Into the bank</b> — identity, collections, shipments, results</span>
+    <span><span class="sw" style="background:#F7B342"></span><b>Out of the bank</b> — the study record, researchers, oversight</span>
+    <span><span class="sw" style="background:#4ADE80"></span><b>Physical world</b> — scans and shipments</span>
+  </div>
+</div>
+<footer>BioTrax · a ScienceTrax working prototype · <a href="index.html">back to the showcase</a></footer>
+</body>
+</html>
